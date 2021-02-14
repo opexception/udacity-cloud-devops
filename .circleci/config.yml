@@ -17,11 +17,13 @@ jobs:
     steps:
       - run echo "world"
 workflows:
+  default:
+    jobs:
+      - print_hello
+      - print_world:
+        requires: [print_hello]
   # Name the workflow "welcome"
   welcome:
     # Run the welcome/run job in its own container
     jobs:
       - welcome/run
-      - print_hello
-      - print_world:
-        requires: [print_hello]
