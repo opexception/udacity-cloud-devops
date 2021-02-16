@@ -8,21 +8,21 @@ jobs:
           #command: |
           #  echo hello
       - persist_to_workspace:
-          root: /tmp
+          root: /tmp/
           paths:
             - output.txt
   print_output_file:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - attache_workspace
-          at: /tmp
+      - attach_workspace:
+          at: /tmp/
       - run: cat /tmp/output.txt
 workflows:
   welcome:
     jobs:
       - save_hello_world_output
-      - print_output_file
+      - print_output_file:
           requires:
             - save_hello_world_output
 
