@@ -1,29 +1,26 @@
 version: 2.1
 jobs:
-  print_hello:
+  save_hello_world_output:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - run: echo hello
+      - run: echo "hello world" > output.txt
           #command: |
           #  echo hello
-  print_world:
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - output.txt
+  print_output_file:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - run: echo world
-          #command: |
-          #  echo world
-  env-var-test:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - run: echo $my_name
+      - attache_workspace
+          at: /tmp/workspace
+      - run: cat output.txt
 workflows:
   welcome:
     jobs:
-      - print_hello
-      - print_world:
-          requires:
-            - print_hello
-      - env-var-test
+      - save_hello_world_output
+
+
