@@ -50,7 +50,7 @@ jobs:
     <<: *defaults
     steps:
       - print_pipeline_id:
-          id: << pipelin.id >>
+          id: << pipeline.id >>
 
 workflows:
   welcome:
