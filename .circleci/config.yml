@@ -51,6 +51,12 @@ jobs:
     steps:
       - print_pipeline_id:
           id: << pipeline.id >>
+  a_failed_job:
+    <<: *defaults
+    steps:
+      - run: return 1
+      - run: echo "Hello ERROR!"
+          when: on_fail
 
 workflows:
   welcome:
@@ -65,3 +71,4 @@ workflows:
           requires:
             - save_hello_world_output
       - say_pipeline_id
+      - a_failed_job
