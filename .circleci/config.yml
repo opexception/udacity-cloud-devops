@@ -54,7 +54,7 @@ jobs:
   a_failed_job:
     <<: *defaults
     steps:
-      - run: return 1
+      - run: exit 1
       - run: 
           command: echo "Hello ERROR!"
           when: on_fail
