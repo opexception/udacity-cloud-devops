@@ -1,29 +1,19 @@
 version: 2.1
+command:
+  print_pipeline_id:
+    description: This prints the CircleCI pipeline ID
+    - steps:
+        - run: echo $CIRCLE_WORKFLOW_ID
+
 jobs:
-  save_hello_world_output:
+  say_pipeline_id:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - run: echo "hello world" > /tmp/output.txt
-          #command: |
-          #  echo hello
-      - persist_to_workspace:
-          root: /tmp/
-          paths:
-            - output.txt
-  print_output_file:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - attach_workspace:
-          at: /tmp/
-      - run: cat /tmp/output.txt
+      - print_pipeline_id
 workflows:
   welcome:
     jobs:
-      - save_hello_world_output
-      - print_output_file:
-          requires:
-            - save_hello_world_output
+      - say_pipeline_id
 
 
