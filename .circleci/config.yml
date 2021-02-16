@@ -55,7 +55,8 @@ jobs:
     <<: *defaults
     steps:
       - run: return 1
-      - run: echo "Hello ERROR!"
+      - run: 
+          command: echo "Hello ERROR!"
           when: on_fail
 
 workflows:
