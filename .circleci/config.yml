@@ -58,6 +58,11 @@ jobs:
       - run: 
           command: echo "Hello ERROR!"
           when: on_fail
+  create_infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - run: aws cloudformation create-stack --stack-name cicd-test-deploy --template-body file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" --region=us-west-2
 
 workflows:
   welcome:
@@ -73,3 +78,4 @@ workflows:
             - save_hello_world_output
       - say_pipeline_id
       - a_failed_job
+      - create_infrastructure
