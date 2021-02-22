@@ -51,13 +51,13 @@ jobs:
     steps:
       - print_pipeline_id:
           id: << pipeline.id >>
-  #a_failed_job:
-  #  <<: *defaults
-  #  steps:
-  #    - run: exit 1
-  #    - run: 
-  #        command: echo "Hello ERROR!"
-  #        when: on_fail
+  a_failed_job:
+    <<: *defaults
+    steps:
+      - run: exit 1
+      - run: 
+          command: echo "Hello ERROR!"
+          when: on_fail
   create_infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -69,19 +69,37 @@ jobs:
             aws cloudformation deploy \
             --template-file template.yml \
             --stack-name cicd-test-deploy
+  run_ansible_playbook:
+    docker:
+      image: python:3.7-alpine3.11
+      steps:
+        - checkout
+        - add_ssh_keys:
+            fingerprints:
+              - "60:13:9b:fa:3c:81:15:0a:b8:2a:d4:2a:b6:97:c9:68"
+        - run:
+            name: Install dependencies
+            command: |
+               apk add --update ansible
+        - run:
+            name: Configure server
+            command: |
+              ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
 
 workflows:
   welcome:
     jobs:
-      - print_hello
-      - print_world:
-          requires:
-            - print_hello
-      - env-var-test
-      - save_hello_world_output
-      - print_output_file:
-          requires:
-            - save_hello_world_output
-      - say_pipeline_id
-  #    - a_failed_job
-      - create_infrastructure
+      # - print_hello
+      # - print_world:
+      #     requires:
+      #       - print_hello
+      # - env-var-test
+      # - save_hello_world_output
+      # - print_output_file:
+      #     requires:
+      #       - save_hello_world_output
+      # - say_pipeline_id
+      # - a_failed_job
+  deploy:
+      # - create_infrastructure
+      - run_ansible_playbook

@@ -1,0 +1,85 @@
+---
+- name: "update apt packages."
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: yes
+
+- name: "install build tools"
+  become: yes
+  apt:
+    name: ["build-essential"]
+    state: latest
+
+#- name: "download node"
+#  get_url:
+#    url: https://nodejs.org/dist/latest/node-v15.9.0.tar.gz
+#    dest: /tmp/node-v15.9.0.tar.gz
+#    mode: '0444'
+#
+#-name: "unpack node"
+#  ansible.builtin.unarchive:
+#    src: /tmp/node-v15.9.0.tar.gz
+#    dest: /tmp/node
+#    remote_src: yes
+#
+#- name: Create /tmp/node if it does not exist
+#   ansible.builtin.file:
+#     path: /tmp/node
+#     state: directory
+#     mode: '0755'
+
+# - name: "download and unpack node"
+#   ansible.builtin.unarchive:
+#     src: https://nodejs.org/dist/latest/node-v15.9.0.tar.gz
+#     dest: /tmp/node
+#     remote_src: yes
+
+# - name: "./configure node"
+#   ansible.builtin.command: ./configure
+#   args:
+#     chdir: /tmp/node/node-v15.9.0
+
+# - name: "make install node"
+#   ansible.builtin.command: "make install"
+#   become: yes
+#   args:
+#     chdir: /tmp/node/node-v15.9.0
+
+- name: remove dependencies that are no longer required
+  become: yes
+  apt:
+    autoremove: yes
+
+- name: "install dependencies."
+  become: yes
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: "install pm2"
+  become: yes
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: Creates directory
+  file:
+    path: ~/web
+    state: directory
+
+- name: Copy index test page
+  template:
+    src: "files/index.js"
+    dest: "~/web/index.js"
+
+- name: Executing node
+  shell: |
+    pm2 start ~/web/index.js -f
