@@ -85,6 +85,23 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
+  smoke_test:
+    docker:
+      - image: alpine:latest
+    steps:
+      - checkout
+      - run:
+          name: Check URL
+          command: |
+            if curl -s --head "https://google.com" 
+            then
+              echo "It worked!"
+            else
+              echo "It failed"
+            fi
+      - run: 
+          command: echo "curl FAILED!"
+          when: on_fail
 
 workflows:
   # welcome:
@@ -103,4 +120,5 @@ workflows:
   deploy:
     jobs:
       # - create_infrastructure
-      - run_ansible_playbook
+      # - run_ansible_playbook
+      - smoke_test
