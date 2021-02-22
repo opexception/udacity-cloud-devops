@@ -85,18 +85,12 @@ jobs:
           command: |
             echo "[all]" > /tmp/inventory
       - run:
-          command: destroy_environment
-          when: on_fail
-      - run:
           name: gather aws EC2 ip addresses
           command: |
             aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --filters Name=tag:project,Values=udacity \
             --output text >> /tmp/inventory
-      - run:
-          command: destroy_environment
-          when: on_fail
       - run:
           name: paste inventory to memstash.io
           command: |
@@ -109,9 +103,6 @@ jobs:
       #     root: /tmp/
       #     paths:
       #       - inventory
-      - run:
-          command: destroy_environment
-          when: on_fail
   run_ansible_playbook:
     docker:
       - image: python:3.7-alpine3.11
@@ -132,23 +123,15 @@ jobs:
             curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
             --request GET https://api.memstash.io/values/inventory > /tmp/inventory
       - run:
-          command: destroy_environment
-          when: on_fail
-      - run:
           name: Install Ansible
           command: |
               apk add --update ansible
-      - run:
-          command: destroy_environment
-          when: on_fail
       - run:
           name: Configure server
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i /tmp/inventory webapp/main-remote.yml
-      - run:
-          command: destroy_environment
-          when: on_fail
+
   smoke_test:
     docker:
       - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
@@ -161,8 +144,6 @@ jobs:
           command: |
             curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
             --request GET https://api.memstash.io/values/inventory > /tmp/inventory
-      - destroy_environment
-        when: on_fail
       - run:
           name: Check URL
           command: |
@@ -173,8 +154,7 @@ jobs:
             else
               exit 1
             fi
-      - destroy_environment
-        when: on_fail
+
 
 workflows:
   # welcome:
