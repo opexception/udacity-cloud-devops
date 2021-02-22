@@ -131,7 +131,7 @@ jobs:
               exit 1
             fi
       - run:
-          destroy_environment
+          command: destroy_environment
           when: on_fail
 
 workflows:
