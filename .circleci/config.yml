@@ -12,6 +12,12 @@ commands:
         type: string
     steps:
       - run: echo << parameters.id >>
+  destroy_environment:
+    steps:
+      - run:
+          name: Destroy environment
+          command: |
+            aws cloudformation delete-stack --stack-name prod-${CIRCLE_WORKFLOW_ID} 
 
 jobs:
   print_hello:
@@ -68,7 +74,27 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file template.yml \
-            --stack-name cicd-test-deploy
+            --stack-name prod-${CIRCLE_WORKFLOW_ID}
+  create_ansible_inventory:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: create inventory file
+          command: |
+            echo "[all]" > /tmp/inventory
+      - run:
+          name: gather aws EC2 ip addresses
+          command: |
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters Name=tag:project,Values=udacity \
+            --output text >> /tmp/inventory
+      - persist_to_workspace:
+          root: /tmp/
+          paths:
+            - inventory
   run_ansible_playbook:
     docker:
       - image: python:3.7-alpine3.11
@@ -77,6 +103,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "60:13:9b:fa:3c:81:15:0a:b8:2a:d4:2a:b6:97:c9:68"
+      - attach_workspace:
+          at: /tmp/
       - run:
           name: Install dependencies
           command: |
@@ -84,23 +112,25 @@ jobs:
       - run:
           name: Configure server
           command: |
-            ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
+            ansible-playbook -i /tmp/inventory webapp/main-remote.yml
   smoke_test:
     docker:
-      - image: alpine:latest
+      - image: amazon/aws-cli
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/
       - run:
           name: Check URL
           command: |
-            if curl -s --head "https://google.com.dog-fart" 
+            ipaddr=$(tail -1 /tmp/inventory)
+            if curl -s --head "http://${ipaddr}:3000" 
             then
               exit 0
             else
               exit 1
             fi
-      - run: 
-          command: echo "curl FAILED!"
+      - destroy_environment
           when: on_fail
 
 workflows:
@@ -119,6 +149,11 @@ workflows:
       # - a_failed_job
   deploy:
     jobs:
-      # - create_infrastructure
-      # - run_ansible_playbook
-      - smoke_test
+      - create_infrastructure
+      - create_ansible_inventory:
+          requires:
+            create_infrastructure
+      - run_ansible_playbook
+      - smoke_test:
+          requires:
+            run_ansible_playbook
