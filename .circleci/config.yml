@@ -130,8 +130,9 @@ jobs:
             else
               exit 1
             fi
-      - destroy_environment:
-        when: on_fail
+      - run:
+          destroy_environment
+          when: on_fail
 
 workflows:
   # welcome:
