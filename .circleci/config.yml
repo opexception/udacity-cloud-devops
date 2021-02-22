@@ -77,9 +77,13 @@ jobs:
             --stack-name prod-${CIRCLE_WORKFLOW_ID}
   create_ansible_inventory:
     docker:
-      - image: amazon/aws-cli
+      - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
+      - run:
+          name: install awscli
+          command: python -m pip install awscli
       - run:
           name: create inventory file
           command: |
@@ -95,6 +99,9 @@ jobs:
           root: /tmp/
           paths:
             - inventory
+      - run:
+          command: destroy_environment
+          when: on_fail
   run_ansible_playbook:
     docker:
       - image: python:3.7-alpine3.11
@@ -113,13 +120,20 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook -i /tmp/inventory webapp/main-remote.yml
+      - run:
+          command: destroy_environment
+          when: on_fail
   smoke_test:
     docker:
-      - image: amazon/aws-cli
+      #- image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/
+      - run:
+          name: install awscli
+          command: python -m pip install awscli
       - run:
           name: Check URL
           command: |
