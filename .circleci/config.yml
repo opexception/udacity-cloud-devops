@@ -51,18 +51,24 @@ jobs:
     steps:
       - print_pipeline_id:
           id: << pipeline.id >>
-  a_failed_job:
-    <<: *defaults
-    steps:
-      - run: exit 1
-      - run: 
-          command: echo "Hello ERROR!"
-          when: on_fail
+  #a_failed_job:
+  #  <<: *defaults
+  #  steps:
+  #    - run: exit 1
+  #    - run: 
+  #        command: echo "Hello ERROR!"
+  #        when: on_fail
   create_infrastructure:
     docker:
       - image: amazon/aws-cli
     steps:
-      - run: aws cloudformation create-stack --stack-name cicd-test-deploy --template-body file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" --region=us-west-2
+      - checkout
+      - run:
+          name: Build infrastructure
+          command: |
+            aws cloudformation deploy \
+            --template-file template.yml
+            --stack-name cicd-test-deploy
 
 workflows:
   welcome:
@@ -77,5 +83,5 @@ workflows:
           requires:
             - save_hello_world_output
       - say_pipeline_id
-      - a_failed_job
+  #    - a_failed_job
       - create_infrastructure
