@@ -155,6 +155,8 @@ workflows:
           requires:
             - create_infrastructure
       - run_ansible_playbook
+          requires:
+            - create_ansible_inventory
       - smoke_test:
           requires:
             - run_ansible_playbook
