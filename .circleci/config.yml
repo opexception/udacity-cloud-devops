@@ -78,7 +78,7 @@ jobs:
   create_ansible_inventory:
     docker:
       - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
-      - image: python:3.7-alpine3.11
+      - image: circleci/python
     steps:
       - checkout
       - run:
@@ -126,7 +126,7 @@ jobs:
   smoke_test:
     docker:
       #- image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
-      - image: python:3.7-alpine3.11
+      - image: circleci/python
     steps:
       - checkout
       - attach_workspace:
