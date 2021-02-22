@@ -126,7 +126,7 @@ jobs:
           when: on_fail
   smoke_test:
     docker:
-      #- image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
+      - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
     steps:
       - checkout
       - run:
