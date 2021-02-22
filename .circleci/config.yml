@@ -81,10 +81,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: |
-              cat /etc/release*
-      - run:
           name: create inventory file
           command: |
             echo "[all]" > /tmp/inventory
@@ -95,10 +91,18 @@ jobs:
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --filters Name=tag:project,Values=udacity \
             --output text >> /tmp/inventory
-      - persist_to_workspace:
-          root: /tmp/
-          paths:
-            - inventory
+      - run:
+          name: paste inventory to memstash.io
+          command: |
+            curl -H "Content-Type: text/plain" \
+            -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
+            --request PUT \
+            --data "$(cat /tmp/inventory)" \
+            https://api.memstash.io/values/inventory
+      # - persist_to_workspace:
+      #     root: /tmp/
+      #     paths:
+      #       - inventory
       - run:
           command: destroy_environment
           when: on_fail
@@ -110,13 +114,17 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "60:13:9b:fa:3c:81:15:0a:b8:2a:d4:2a:b6:97:c9:68"
-      - attach_workspace:
-          at: /tmp/
+      # - attach_workspace:
+      #     at: /tmp/
+      - run:
+          name: retrieve inventory from memstash.io
+          command: |
+            curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
+            --request GET https://api.memstash.io/values/inventory > /tmp/inventory
       - run:
           name: Install dependencies
           command: |
               apk add --update ansible
-              apk add --no-cache tar
       - run:
           name: Configure server
           command: |
@@ -129,12 +137,13 @@ jobs:
       - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
     steps:
       - checkout
+      # - attach_workspace:
+      #     at: /tmp/
       - run:
-          name: Install dependencies
+          name: retrieve inventory from memstash.io
           command: |
-              apk add --no-cache tar
-      - attach_workspace:
-          at: /tmp/
+            curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
+            --request GET https://api.memstash.io/values/inventory > /tmp/inventory
       - run:
           name: Check URL
           command: |
