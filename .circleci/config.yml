@@ -87,8 +87,8 @@ jobs:
               ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
 
 workflows:
-  welcome:
-    jobs:
+  # welcome:
+    # jobs:
       # - print_hello
       # - print_world:
       #     requires:
@@ -101,5 +101,6 @@ workflows:
       # - say_pipeline_id
       # - a_failed_job
   deploy:
+    jobs:
       # - create_infrastructure
       - run_ansible_playbook
