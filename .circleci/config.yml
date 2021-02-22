@@ -72,19 +72,19 @@ jobs:
   run_ansible_playbook:
     docker:
       image: python:3.7-alpine3.11
-      steps:
-        - checkout
-        - add_ssh_keys:
-            fingerprints:
-              - "60:13:9b:fa:3c:81:15:0a:b8:2a:d4:2a:b6:97:c9:68"
-        - run:
-            name: Install dependencies
-            command: |
-               apk add --update ansible
-        - run:
-            name: Configure server
-            command: |
-              ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "60:13:9b:fa:3c:81:15:0a:b8:2a:d4:2a:b6:97:c9:68"
+      - run:
+          name: Install dependencies
+          command: |
+              apk add --update ansible
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i webapp/inventory.txt webapp/main-remote.yml
 
 workflows:
   # welcome:
