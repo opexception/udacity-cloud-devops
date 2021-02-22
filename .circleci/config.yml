@@ -144,6 +144,7 @@ jobs:
       - run:
           name: Configure server
           command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i /tmp/inventory webapp/main-remote.yml
       - run:
           command: destroy_environment
