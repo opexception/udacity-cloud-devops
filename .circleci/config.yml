@@ -161,9 +161,8 @@ jobs:
           command: |
             curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
             --request GET https://api.memstash.io/values/inventory > /tmp/inventory
-      - run:
-          destroy_environment
-          when: on_fail
+      - destroy_environment
+      when: on_fail
       - run:
           name: Check URL
           command: |
@@ -174,9 +173,8 @@ jobs:
             else
               exit 1
             fi
-      - run:
-          destroy_environment
-          when: on_fail
+      - destroy_environment
+      when: on_fail
 
 workflows:
   # welcome:
