@@ -224,16 +224,20 @@ workflows:
       # - a_failed_job
   deploy:
     jobs:
-      - create_infrastructure
-      - create_ansible_inventory:
-          requires:
-            - create_infrastructure
-      - run_ansible_playbook:
-          requires:
-            - create_ansible_inventory
-      - smoke_test:
-          requires:
-            - run_ansible_playbook
+      # - create_infrastructure
+      # - create_ansible_inventory:
+      #     requires:
+      #       - create_infrastructure
+      # - run_ansible_playbook:
+      #     requires:
+      #       - create_ansible_inventory
+      # - smoke_test:
+      #     requires:
+      #       - run_ansible_playbook
       - create_and_deploy_front_end
-      - promote_to_production
+      - promote_to_production:
           requires: [create_and_deploy_front_end]
+      - get_last_deployment_id:
+          requires: [promote_to_production]
+      - clean_up_old_front_end:
+          requires: [get_last_deployment_id]
