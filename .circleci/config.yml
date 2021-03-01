@@ -131,7 +131,6 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i /tmp/inventory webapp/main-remote.yml
-
   smoke_test:
     docker:
       - image: amazon/aws-cli # no tar command here!? WTF? need tar to attach workspace
@@ -154,6 +153,59 @@ jobs:
             else
               exit 1
             fi
+  create_and_deploy_front_end:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: |
+          aws cloudformation deploy \
+            --template-file bucket.yml \
+            --stack-name "${CIRCLE_WORKFLOW_ID}" \
+            --parameter-overrides NAME="${CIRCLE_WORKFLOW_ID}"
+      - run: aws s3 sync . s3://"${CIRCLE_WORKFLOW_ID}" --delete
+  get_last_deployment_id:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: |
+          aws cloudformation \
+          list-exports --query "Exports[?Name==\`PipelineID\`].Value" \
+          --no-paginate --output text > /tmp/deployment
+      - run:
+          name: paste deployment to memstash.io
+          command: |
+            curl -H "Content-Type: text/plain" \
+            -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
+            --request PUT \
+            --data "$(cat /tmp/deployment)" \
+            https://api.memstash.io/values/deployment
+  promote_to_production:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: |
+          aws cloudformation deploy \
+            --template-file cloudformation.yml \
+            --stack-name cloudfront \
+            --parameter-overrides PipelineID="${CIRCLE_WORKFLOW_ID}"
+  clean_up_old_front_end:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: retrieve deployment from memstash.io
+          command: |
+            curl -H "token: 650fb8c2-e77f-4649-b51e-269f27ccbefb" \
+            --request GET https://api.memstash.io/values/deployment > /tmp/deployment
+      - run:
+          name: Destroy S3 bucket
+          command: |
+            aws s3 rm "s3://$(cat /tmp/deployment)" --recursive
+            aws cloudformation delete-stack --stack-name "$(cat /tmp/deployment)"
 
 
 workflows:
@@ -182,3 +234,6 @@ workflows:
       - smoke_test:
           requires:
             - run_ansible_playbook
+      - create_and_deploy_front_end
+      - promote_to_production
+          requires: [create_and_deploy_front_end]
